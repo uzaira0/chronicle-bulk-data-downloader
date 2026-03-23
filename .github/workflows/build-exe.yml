@@ -16,7 +16,10 @@ jobs:
             artifact_name: ChronicleBulkDataDownloader-Windows
             artifact_ext: zip
           - os: macos-latest
-            artifact_name: ChronicleBulkDataDownloader-macOS
+            artifact_name: ChronicleBulkDataDownloader-macOS-AppleSilicon
+            artifact_ext: dmg
+          - os: macos-15-intel
+            artifact_name: ChronicleBulkDataDownloader-macOS-Intel
             artifact_ext: dmg
 
     runs-on: ${{ matrix.os }}
@@ -94,5 +97,6 @@ jobs:
         with:
           files: |
             ChronicleBulkDataDownloader-Windows/*.zip
-            ChronicleBulkDataDownloader-macOS/*.dmg
+            ChronicleBulkDataDownloader-macOS-AppleSilicon/*.dmg
+            ChronicleBulkDataDownloader-macOS-Intel/*.dmg
           generate_release_notes: true
