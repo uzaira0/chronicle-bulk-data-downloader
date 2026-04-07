@@ -1,0 +1,22 @@
+# Include documentation
+include README.md
+include LICENSE
+
+# Include configuration files
+include pyproject.toml
+
+# Include images
+include *.png
+
+# Include all Python files
+recursive-include chronicle_bulk_data_downloader *.py
+
+# Exclude compiled Python files
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude *.pyo
+global-exclude .DS_Store
+
+# Exclude build artifacts
+global-exclude *.so
+global-exclude *.egg-info

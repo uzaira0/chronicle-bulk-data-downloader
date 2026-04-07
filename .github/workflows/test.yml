@@ -1,0 +1,92 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.11', '3.13']
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install system dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libxcb-cursor0 libxkbcommon0
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ".[dev,gui]"
+
+      - name: Run tests
+        uses: coactions/setup-xvfb@v1
+        with:
+          run: pytest tests/ -v --tb=short
+
+      - name: Type check
+        run: basedpyright chronicle_bulk_data_downloader/
+
+      - name: Lint
+        run: ruff check chronicle_bulk_data_downloader/ tests/
+
+  import-smoke:
+    # Verify package imports work on all platforms without optional deps
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install core only (no gui, no polars)
+        run: pip install .
+
+      - name: Smoke test — core imports
+        run: |
+          python -c "from chronicle_bulk_data_downloader import ChronicleDownloader, __version__; print(f'v{__version__} OK')"
+          python -c "from chronicle_bulk_data_downloader.cli.cli import main; print('CLI OK')"
+
+      - name: Smoke test — polars guard
+        run: |
+          python -c "
+          import asyncio
+          from chronicle_bulk_data_downloader.core.config import AuthConfig, DataTypeConfig, DownloadConfig
+          from chronicle_bulk_data_downloader.core.downloader import ChronicleDownloader
+          from chronicle_bulk_data_downloader.enums import ChronicleDownloadDataType
+          config = DownloadConfig(
+              auth=AuthConfig(auth_token='t', study_id='s'),
+              download_folder='/tmp',
+              data_types=DataTypeConfig(),
+          )
+          dl = ChronicleDownloader(config=config)
+          try:
+              asyncio.run(dl.fetch_data_type(['d1'], ChronicleDownloadDataType.RAW))
+              assert False, 'Should have raised ImportError'
+          except ImportError as e:
+              assert 'polars' in str(e)
+              print('Polars guard OK')
+          "
