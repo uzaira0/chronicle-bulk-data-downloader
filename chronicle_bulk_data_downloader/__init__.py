@@ -9,7 +9,7 @@ This package provides:
 
 from __future__ import annotations
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 # Make core classes easily accessible at package level
 from .core import (
