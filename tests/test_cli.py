@@ -124,6 +124,5 @@ class TestParseArgs:
             assert args.raw is True
 
     def test_missing_required_args_exits(self) -> None:
-        with patch("sys.argv", ["prog"]):
-            with pytest.raises(SystemExit):
-                parse_args()
+        with patch("sys.argv", ["prog"]), pytest.raises(SystemExit):
+            parse_args()

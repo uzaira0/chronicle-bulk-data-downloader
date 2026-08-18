@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-
 
 from chronicle_bulk_data_downloader.core.config import (
     AuthConfig,
@@ -19,8 +18,8 @@ from chronicle_bulk_data_downloader.core.config import (
 class TestDateRangeConfig:
     def test_to_api_params_both_dates(self) -> None:
         dr = DateRangeConfig(
-            start_date=datetime(2026, 1, 1, tzinfo=timezone.utc),
-            end_date=datetime(2026, 3, 15, tzinfo=timezone.utc),
+            start_date=datetime(2026, 1, 1, tzinfo=UTC),
+            end_date=datetime(2026, 3, 15, tzinfo=UTC),
         )
         params = dr.to_api_params()
         assert "startDate" in params
@@ -32,7 +31,7 @@ class TestDateRangeConfig:
         assert dr.to_api_params() == {}
 
     def test_to_api_params_only_start(self) -> None:
-        dr = DateRangeConfig(start_date=datetime(2026, 1, 1, tzinfo=timezone.utc))
+        dr = DateRangeConfig(start_date=datetime(2026, 1, 1, tzinfo=UTC))
         params = dr.to_api_params()
         assert "startDate" in params
         assert "endDate" not in params

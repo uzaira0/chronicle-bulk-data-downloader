@@ -60,6 +60,11 @@ chronicle_bulk_data_downloader = ["*.json", "*.png"]
 line-length = 140
 target-version = "py311"
 
+[tool.ruff.lint]
+# Blind `except Exception` is deliberate at the thread, per-participant and Qt
+# teardown boundaries: one participant or one signal must not abort a bulk run.
+ignore = ["BLE001"]
+
 [tool.basedpyright]
 pythonVersion = "3.11"
 typeCheckingMode = "strict"

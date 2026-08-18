@@ -37,7 +37,7 @@ from .enums import (
     OutputFormat,
 )
 
-__all__ = [
+__all__ = [  # noqa: RUF022 - grouped by purpose, not alphabetically
     # Main classes
     "ChronicleDownloader",
     # Configuration

@@ -57,8 +57,8 @@ def get_matching_files_from_folder(
                 ):
                     matching_files.append(f)
 
-    except Exception as e:
-        LOGGER.exception(f"Error while searching for files: {e}")
+    except Exception:
+        LOGGER.exception("Error while searching for files")
         matching_files = []
         for root, _, files in os.walk(str(folder_path)):
             for file in files:
@@ -81,4 +81,4 @@ def get_local_timezone() -> tzinfo | None:
     """
     Retrieves the local timezone of the system.
     """
-    return datetime_class.now(datetime.timezone.utc).astimezone().tzinfo
+    return datetime_class.now(datetime.UTC).astimezone().tzinfo

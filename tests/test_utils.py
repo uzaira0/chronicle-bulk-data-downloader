@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 from chronicle_bulk_data_downloader.utils import (
     get_local_timezone,
     get_matching_files_from_folder,

@@ -6,7 +6,7 @@ and zero-byte file deletion without hitting the real API.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import patch
 
@@ -38,7 +38,7 @@ def downloader(sample_config: DownloadConfig) -> ChronicleDownloader:
 
 class TestBuildDownloadUrl:
     def test_raw_data_url_contains_study_id(self, downloader: ChronicleDownloader) -> None:
-        url, dtype_str, device_type = downloader._build_download_url(
+        url, _dtype_str, device_type = downloader._build_download_url(
             "participant1", ChronicleDownloadDataType.RAW
         )
         assert downloader.config.auth.study_id in url
@@ -48,7 +48,7 @@ class TestBuildDownloadUrl:
         assert device_type == ChronicleDeviceType.ANDROID
 
     def test_ios_sensor_url(self, downloader: ChronicleDownloader) -> None:
-        url, dtype_str, device_type = downloader._build_download_url(
+        url, _dtype_str, device_type = downloader._build_download_url(
             "p1", ChronicleDownloadDataType.IOSSENSOR
         )
         assert "IOSSensor" in url
@@ -64,8 +64,8 @@ class TestBuildDownloadUrl:
 
     def test_date_range_added_to_url(self, downloader: ChronicleDownloader) -> None:
         date_range = DateRangeConfig(
-            start_date=datetime(2026, 1, 1, tzinfo=timezone.utc),
-            end_date=datetime(2026, 3, 15, tzinfo=timezone.utc),
+            start_date=datetime(2026, 1, 1, tzinfo=UTC),
+            end_date=datetime(2026, 3, 15, tzinfo=UTC),
         )
         url, _, _ = downloader._build_download_url(
             "p1", ChronicleDownloadDataType.RAW, date_range
@@ -247,7 +247,7 @@ class TestArchiveData:
         self, sample_config: DownloadConfig, tmp_download_dir: Path
     ) -> None:
         sample_config.download_folder = tmp_download_dir
-        today = datetime.now().strftime("%m-%d-%Y")
+        today = datetime.now(UTC).strftime("%m-%d-%Y")
         today_file = tmp_download_dir / f"participant1 Chronicle Android Raw Data {today}.csv"
         today_file.write_text("data")
 
@@ -328,8 +328,7 @@ class TestPolarsOptional:
         self, sample_config: DownloadConfig
     ) -> None:
         dl = ChronicleDownloader(config=sample_config)
-        with patch("chronicle_bulk_data_downloader.core.downloader.pl", None):
-            with pytest.raises(ImportError, match="polars"):
-                await dl.fetch_data_type(
-                    ["device1"], ChronicleDownloadDataType.RAW
-                )
+        with patch("chronicle_bulk_data_downloader.core.downloader.pl", None), pytest.raises(ImportError, match="polars"):
+            await dl.fetch_data_type(
+                ["device1"], ChronicleDownloadDataType.RAW
+            )
