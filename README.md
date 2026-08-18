@@ -1,171 +1,145 @@
 # Chronicle Bulk Data Downloader
 
-A tool for downloading Chronicle data in bulk via GUI, CLI, or as an importable Python package.
+Download every participant's data from a [Chronicle](https://getmethodic.com/) study in one go — as a desktop app, a CLI, or a Python package.
 
-Not affiliated with Chronicle or GetMethodic, please visit them here: https://getmethodic.com/
+Not affiliated with Chronicle or GetMethodic.
 
-**Please do not lower or remove the rate limiting.**
+> **Please do not lower or remove the rate limiting.** It exists to keep bulk downloads from overloading the Chronicle API for everyone else.
 
-## Features
+## Install
 
-- **Multiple Interfaces**: Use via GUI, command-line, or import as a Python package
-- **Comprehensive Data Download**: Raw usage events, preprocessed data, surveys, iOS sensor data, time use diaries
-- **Flexible Filtering**: Include or exclude specific participant IDs
-- **Automated Organization**: Automatically organize and archive downloaded data
-- **Progress Tracking**: Real-time progress updates with cancellation support
-- **Cross-Platform**: Works on Windows, macOS, and Linux
+**Desktop app** — download a prebuilt build for Windows or macOS (Intel and Apple Silicon) from the [Releases](https://github.com/uzaira0/chronicle-bulk-data-downloader/releases) page. Nothing else to install.
 
-## Installation
-
-### From Source
+**From source** (Python 3.11+):
 
 ```bash
 git clone https://github.com/uzaira0/chronicle-bulk-data-downloader.git
 cd chronicle-bulk-data-downloader
-
-# Install in editable mode
-pip install -e .
-
-# With GUI support
-pip install -e ".[gui]"
-
-# With development dependencies
-pip install -e ".[dev,gui]"
+pip install ".[gui]"     # omit [gui] for CLI/library use only
 ```
 
-### Direct Install
+## What you need
+
+- A **study ID** — the 36-character identifier of the study in Chronicle.
+- An **auth token**, copied from the Chronicle web app:
+
+  ![Where to copy the authorization token](./authorization_token_copy_location.png)
+
+Tokens expire. If a download starts failing with authentication errors, copy a fresh one.
+
+## Data types
+
+| Data | CLI flag |
+| --- | --- |
+| Raw usage events (Android / Fire) | `--raw` |
+| Preprocessed usage data | `--preprocessed` |
+| App usage survey responses | `--survey` |
+| iOS sensor data | `--ios-sensor` |
+| Time use diary — daytime | `--time-use-diary-daytime` |
+| Time use diary — nighttime | `--time-use-diary-nighttime` |
+| Time use diary — summarized | `--time-use-diary-summarized` |
+
+Pick at least one. Android data types (raw, preprocessed, survey) can be combined freely, but
+iOS sensor data must be downloaded on its own run — the desktop app disables the Android
+checkboxes while it is selected.
+
+## Desktop app
 
 ```bash
-pip install .
+chronicle-downloader-gui     # or: python main.py
 ```
 
-## Usage
+Choose a download folder, paste your token and study ID, tick the data types you want, and press **Run**. Progress is shown live and the run can be cancelled at any point.
 
-### GUI Application
+Optional extras:
 
-```bash
-chronicle-downloader-gui
-```
+- **Participant filter** — a comma-separated list of IDs. By default the listed IDs are *excluded*; tick "inclusive" to download *only* them.
+- **Delete zero-byte files** — throws away empty CSVs (participants with no data for that type) once the run finishes.
 
-Or run directly:
-```bash
-python main.py
-```
+Everything except the auth token is remembered after a successful run — folder, study ID,
+filters and checkboxes come back the next time you open the app. The token is never written
+to disk, so paste a fresh one each session.
 
-**GUI Steps:**
-1. Select the download folder
-2. Paste the token you copied from the Chronicle GetMethodic website:
+## Command line
 
-   ![Authorization Token Copy](./authorization_token_copy_location.png)
-
-3. Enter a valid Chronicle study ID
-4. Optionally provide participant IDs to filter (separated by commas)
-   - Exclusive filtering (default) excludes the IDs you list
-   - Inclusive filtering (when checkbox is checked) only downloads the IDs you listed
-5. Check which data types to download
-6. Optionally check if you want to delete zero byte files
-7. Click the "Run" button
-
-### Command-Line Interface
-
-```bash
-chronicle-downloader-cli --help
-```
-
-**Basic Usage:**
 ```bash
 chronicle-downloader-cli \
-  --study-id "your-study-id-here" \
-  --auth-token "your-auth-token-here" \
-  --download-folder "./data" \
+  --study-id "<36-character-study-id>" \
+  --auth-token "<token>" \
+  --download-folder ./data \
   --raw --preprocessed --survey
 ```
 
-**With Participant Filtering:**
-```bash
-# Include only specific participants
-chronicle-downloader-cli \
-  --study-id "your-study-id" \
-  --auth-token "your-token" \
-  --download-folder "./data" \
-  --raw \
-  --include-ids "participant1,participant2,participant3"
+| Option | Purpose |
+| --- | --- |
+| `--include-ids a,b,c` | Download only these participants |
+| `--exclude-ids a,b,c` | Download everyone except these participants |
+| `--delete-zero-byte-files` | Remove empty CSVs after the run |
+| `--config-file cfg.json` | Read settings from a saved GUI config file (`--study-id`, `--auth-token` and `--download-folder` are still required on the command line and override the file) |
+| `--verbose` / `-v` | Verbose logging |
 
-# Exclude specific participants
-chronicle-downloader-cli \
-  --study-id "your-study-id" \
-  --auth-token "your-token" \
-  --download-folder "./data" \
-  --raw \
-  --exclude-ids "test_participant,demo_user"
-```
+`--include-ids` and `--exclude-ids` are mutually exclusive. Press `Ctrl+C` to cancel a run cleanly.
 
-**Load Configuration from File:**
-```bash
-chronicle-downloader-cli --config-file my_config.json
-```
-
-### Python Package
+## Python package
 
 ```python
+import asyncio
+
 from chronicle_bulk_data_downloader import (
-    ChronicleDownloader,
-    DownloadConfig,
     AuthConfig,
+    ChronicleDownloader,
     DataTypeConfig,
-    FilterConfig,
+    DownloadConfig,
 )
 
-# Create configuration
 config = DownloadConfig(
-    auth=AuthConfig(
-        study_id="your-study-id",
-        auth_token="your-token",
-    ),
-    data_types=DataTypeConfig(
-        download_raw=True,
-        download_preprocessed=True,
-        download_survey=True,
-    ),
+    auth=AuthConfig(study_id="<36-character-study-id>", auth_token="<token>"),
+    data_types=DataTypeConfig(download_raw=True, download_preprocessed=True, download_survey=True),
     download_folder="./data",
     delete_zero_byte_files=True,
 )
 
-# Create downloader with optional callbacks
-def on_progress(progress_percent: int, completed_files: int | None = None, total_files: int | None = None) -> None:
-    print(f"Progress: {progress_percent}% ({completed_files}/{total_files})")
-
-def should_cancel() -> bool:
-    return False
-
-downloader = ChronicleDownloader(
-    config=config,
-    progress_callback=on_progress,
-    cancellation_check=should_cancel,
-)
-
-# Run download
-import asyncio
-asyncio.run(downloader.download_all())
+asyncio.run(ChronicleDownloader(config=config).download_all())
 ```
 
-## Testing
+`ChronicleDownloader` also takes optional `progress_callback` and `cancellation_check` callables, and exposes `get_participants()`, `filter_participants()`, `organize_data()` and `archive_data()` if you want to drive the steps yourself. `FilterConfig` handles include/exclude lists and `DateRangeConfig` (from `chronicle_bulk_data_downloader.core`) limits a download to a date window.
+
+To get data back as a [Polars](https://pola.rs/) DataFrame instead of CSV files, install `polars` and use `fetch_data_type()`:
+
+```python
+from chronicle_bulk_data_downloader import ChronicleDownloadDataType
+
+downloader = ChronicleDownloader(config=config)
+device_ids = asyncio.run(downloader.get_enrolled_device_ids())
+df = asyncio.run(downloader.fetch_data_type(device_ids, ChronicleDownloadDataType.RAW))
+```
+
+## What lands on disk
+
+Files are named `<participant> Chronicle <Device> <DataType> MM-DD-YYYY.csv` and sorted into folders in your download directory:
+
+```
+data/
+├── Chronicle Android Raw Data Downloads/
+├── Chronicle Android Preprocessed Data Downloads/
+├── Chronicle Android Survey Data Downloads/
+├── Chronicle iOS Sensor Data Downloads/
+└── Chronicle Time Use Diary Data Downloads/
+```
+
+Re-running on a later day moves the previous day's files into a dated `... Archive/` subfolder, so each folder holds today's download and a history beside it.
+
+## Development
 
 ```bash
-# Run tests
+pip install -e ".[dev,gui]"
 pytest tests/ -v
-
-# Type check
 basedpyright chronicle_bulk_data_downloader/
-
-# Lint
 ruff check chronicle_bulk_data_downloader/ tests/
 ```
 
-## Pre-built Executables
-
-Pre-built executables for Windows and macOS are available on the [Releases](https://github.com/uzaira0/chronicle-bulk-data-downloader/releases) page.
+Tests, type checking and linting run on Windows, macOS and Linux against Python 3.11 and 3.13 via GitHub Actions. Tagging `v*` builds and publishes the desktop executables.
 
 ## License
 
-MIT
+[GNU General Public License v3.0 or later](./LICENSE).
