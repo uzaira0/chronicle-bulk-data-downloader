@@ -4,7 +4,6 @@ from __future__ import annotations
 class ChronicleDownloaderError(Exception):
     """Base exception for Chronicle Downloader errors."""
 
-    pass
 
 
 class ChronicleAPIError(ChronicleDownloaderError):
@@ -26,16 +25,13 @@ class AuthenticationError(ChronicleAPIError):
 class DownloadCancelledError(ChronicleDownloaderError):
     """Raised when download is cancelled by user."""
 
-    pass
 
 
 class ConfigurationError(ChronicleDownloaderError):
     """Raised when configuration is invalid."""
 
-    pass
 
 
 class NoParticipantsError(ChronicleDownloaderError):
     """Raised when no participants are found after filtering."""
 
-    pass

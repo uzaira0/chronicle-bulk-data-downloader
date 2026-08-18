@@ -684,7 +684,8 @@ class ChronicleBulkDataDownloader(QWidget):
                 if hasattr(self.worker, "cancelled"):
                     self.worker.cancelled.disconnect()
             except Exception:
-                pass
+                # Signals may already be disconnected; nothing to recover from here.
+                LOGGER.debug("Worker signals were already disconnected", exc_info=True)
 
     def on_download_complete(self) -> None:
         """

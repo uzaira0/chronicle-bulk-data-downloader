@@ -206,7 +206,7 @@ class ChronicleDownloader:
         device_ids: list[str],
         data_type: ChronicleDownloadDataType,
         output_format: OutputFormat = OutputFormat.DATAFRAME,
-    ) -> "pl.DataFrame":
+    ) -> pl.DataFrame:
         """
         Fetch data for a specific data type for multiple devices, returning a DataFrame.
 
@@ -616,7 +616,7 @@ class ChronicleDownloader:
                 )
             else:
                 LOGGER.exception(
-                    f"Request error when downloading {data_type_str} for {participant_id}: {e}"
+                    f"Request error when downloading {data_type_str} for {participant_id}"
                 )
                 raise ChronicleAPIError(0, f"Network error: {e}")
 

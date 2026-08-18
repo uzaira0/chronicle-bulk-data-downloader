@@ -236,9 +236,11 @@ class TestAsyncDownloadWithMockedAPI:
         mock_client.get = AsyncMock(side_effect=[participants_response, *csv_responses])
         mock_client.is_closed = False
 
-        with patch.object(downloader, "_get_client", return_value=mock_client):
-            with patch("chronicle_bulk_data_downloader.core.downloader.asyncio.sleep", new_callable=AsyncMock):
-                await downloader.download_all()
+        with (
+            patch.object(downloader, "_get_client", return_value=mock_client),
+            patch("chronicle_bulk_data_downloader.core.downloader.asyncio.sleep", new_callable=AsyncMock),
+        ):
+            await downloader.download_all()
 
         # Verify progress was reported
         assert len(progress_values) > 0
