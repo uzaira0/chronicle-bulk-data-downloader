@@ -8,7 +8,7 @@ version = "1.1.0"
 description = "A tool for downloading Chronicle data in bulk via GUI or CLI"
 readme = "README.md"
 authors = [
-    {name = "Uzair Alam", email = "uzair.alam@bcm.edu"}
+    {name = "uzaira0", email = "124936575+uzaira0@users.noreply.github.com"}
 ]
 license = {text = "GPL-3.0-or-later"}
 requires-python = ">=3.11"
